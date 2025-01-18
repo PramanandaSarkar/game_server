@@ -1,103 +1,185 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-import asyncio
-from typing import List
-from random import randint
-import logging
+from enum import Enum
+from typing import List, Dict, Optional
+from datetime import datetime
 
-app = FastAPI()
+# Global Configurations
+class GlobalConfig:
+    timeScaling: int = 1  # Placeholder for time scaling factor
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-logger = logging.getLogger()
 
-# Player and Match data models
-class Player(BaseModel):
-    player_id: int
-    level: int
+class ServerConfig:
+    MATCH_LOG = "logs/match.log"
+    PLAYER_CONNECTION_LOG = "logs/player.log"
+    MATCH_DETAILS_LOG = "logs/match_details.log"
 
-class Match(BaseModel):
-    match_id: int
-    players: List[Player]
 
-# Queue to manage players waiting for a match
-waiting_queue = []
-matches = []
+class MatchConfig:
+    CONSIDER_MATCH_RESULT = 10  # Max number of match results to consider for rank adjustments
 
-# Log data
-log_data = {
-    "total_players": 0,
-    "total_matches": 0,
-    "players_joined": 0,
-    "matches_created": 0,
-    "players_disconnected": 0,
-}
 
-# Matchmaking logic with logging
-async def matchmake_player(player: Player):
-    global waiting_queue, log_data
+class Match_Type(Enum):
+    TWO_PLAYER = 2
+    FOUR_PLAYER = 4
+    SIX_PLAYER = 6
+    EIGHT_PLAYER = 8
+    TEN_PLAYER = 10
 
-    # Try to form a fair match
-    matched_players = [player]
-    for waiting_player in waiting_queue:
-        if abs(waiting_player.level - player.level) <= 10:  # Fair level range
-            matched_players.append(waiting_player)
-            waiting_queue.remove(waiting_player)
-        if len(matched_players) >= 4:  # Max players in a match
-            break
 
-    # Create a match if there are enough players
-    if len(matched_players) >= 2:
-        match_id = randint(1000, 9999)  # Random match ID
-        match = Match(match_id=match_id, players=matched_players)
-        matches.append(match)
-        log_data["matches_created"] += 1
-        logger.info(f"Match created: {match.match_id} with {len(matched_players)} players.")
-        return match
-    else:
-        # If not enough players, return player to queue
-        waiting_queue.append(player)
+# Match Class
+class Match:
+    def __init__(self, id: int, matchType: Match_Type):
+        self.id = id
+        self.matchType = matchType
+        self.players: List[Player] = []
+        self.startTime: Optional[str] = None
+        self.endTime: Optional[str] = None
+        self.isActive: bool = False
+
+    def start(self):
+        self.startTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.isActive = True
+
+    def end(self):
+        self.endTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.isActive = False
+
+
+# Player Class
+class Player:
+    def __init__(self, player_id: int, server_id: int, rank: int):
+        self.id = player_id
+        self.serverId = server_id
+        self.rank = rank
+        self.connectionLog: List[str] = []
+        self.matchLog: List[str] = []
+        self.matchResult: List[str] = []
+        self.inMatch: bool = False
+
+    @staticmethod
+    def formatLog(action: str, time: str) -> str:
+        return f"{action}\t{time}\n"
+
+    def joinMatch(self, time: str):
+        self.inMatch = True
+        log_str = self.formatLog("JOIN_MATCH", time)
+        self.matchLog.append(log_str)
+
+    def disconnect(self, time: str):
+        if self.inMatch:
+            log_str = self.formatLog("DISCONNECTED", time)
+            self.matchLog.append(log_str)
+        log_str = self.formatLog("LOGOUT", time)
+        self.connectionLog.append(log_str)
+        self.inMatch = False
+
+    def connect(self, time: str):
+        log_str = self.formatLog("LOGIN", time)
+        self.connectionLog.append(log_str)
+
+    def endMatch(self, time: str, isWin: bool):
+        if isWin:
+            self.rank += 1
+        self.matchResult.append("1" if isWin else "0")
+        if len(self.matchResult) > MatchConfig.CONSIDER_MATCH_RESULT:
+            self.matchResult = self.matchResult[:MatchConfig.CONSIDER_MATCH_RESULT]
+        log_str = self.formatLog("END_MATCH", time)
+        self.matchLog.append(log_str)
+
+
+# Matchmaking Class
+class MatchMaking:
+    def __init__(self):
+        self.players_queue: Dict[Match_Type, List[Player]] = {match_type: [] for match_type in Match_Type}
+        self.active_matches: Dict[int, Match] = {}
+        self.match_id_counter = 1
+
+    def add_player_to_queue(self, player: Player, match_type: Match_Type):
+        """Add a player to the matchmaking queue for a specific match type."""
+        self.players_queue[match_type].append(player)
+
+    def create_match(self, match_type: Match_Type):
+        """Create a match if enough players are available in the queue."""
+        queue = self.players_queue[match_type]
+        if len(queue) >= match_type.value:
+            players_for_match = queue[:match_type.value]
+            match = Match(self.match_id_counter, match_type)
+            match.players = players_for_match
+            match.start()
+            self.active_matches[self.match_id_counter] = match
+            self.match_id_counter += 1
+
+            # Remove players from the queue
+            self.players_queue[match_type] = queue[match_type.value:]
+
+            # Log players joining the match
+            for player in players_for_match:
+                player.joinMatch(match.startTime)
+
+            return match
         return None
 
-# Endpoint to join player and trigger matchmaking
-@app.post("/join")
-async def join_player(player: Player):
-    global log_data
+    def match_players(self):
+        """Try to create matches for all match types."""
+        for match_type in Match_Type:
+            while len(self.players_queue[match_type]) >= match_type.value:
+                self.create_match(match_type)
 
-    # Log player join event
-    log_data["players_joined"] += 1
-    log_data["total_players"] += 1
-    logger.info(f"Player {player.player_id} with level {player.level} joined the queue.")
 
-    # Start matchmaking for the player
-    match = await matchmake_player(player)
+# Logger Class
+class Logger:
+    @staticmethod
+    def log_match(match: Match):
+        """Log match details."""
+        with open(ServerConfig.MATCH_LOG, 'a') as log_file:
+            log_file.write(
+                f"Match ID {match.id} - Type: {match.matchType.name} - Players: {[player.id for player in match.players]} - Start: {match.startTime} - End: {match.endTime}\n"
+            )
 
-    if match:
-        return {"message": "Match created", "match_id": match.match_id, "players": [p.player_id for p in match.players]}
-    else:
-        return {"message": "Waiting for more players to form a match."}
+    @staticmethod
+    def log_player(player: Player):
+        """Log player connection and disconnection."""
+        with open(ServerConfig.PLAYER_CONNECTION_LOG, 'a') as log_file:
+            log_file.write(f"Player {player.id} - Server {player.serverId} - Rank: {player.rank}\n")
 
-# Endpoint for player disconnection
-@app.post("/disconnect")
-async def disconnect_player(player_id: int, match_id: int = None):
-    global log_data
 
-    # Log player disconnection event
-    log_data["players_disconnected"] += 1
-    logger.info(f"Player {player_id} disconnected.")
+# Server Class
+class Server:
+    def __init__(self, server_id: int):
+        self.server_id = server_id
+        self.players: List[Player] = []
+        self.matchmaking = MatchMaking()
 
-    # If player is in a match, we keep the match ongoing
-    if match_id:
-        return {"message": f"Player {player_id} disconnected from match {match_id}, but match continues."}
-    else:
-        return {"message": f"Player {player_id} disconnected before match started."}
+    def add_player(self, player: Player):
+        """Add a player to the server."""
+        self.players.append(player)
+        player.connect(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        Logger.log_player(player)
 
-# Endpoint to view current matches
-@app.get("/matches")
-def get_matches():
-    return {"matches": [{"match_id": match.match_id, "players": [p.player_id for p in match.players]} for match in matches]}
+    def start_matchmaking(self):
+        """Start the matchmaking process."""
+        self.matchmaking.match_players()
 
-# Endpoint to get log statistics
-@app.get("/logs")
-def get_logs():
-    return log_data
+
+# Simulation of the Game Server
+def simulate_game_server():
+    # Create servers
+    server_1 = Server(server_id=1)
+    server_2 = Server(server_id=2)
+
+    # Create players and assign them to servers
+    players = [Player(player_id=i, server_id=(1 if i % 2 == 0 else 2), rank=i % 5 + 1) for i in range(1, 21)]
+
+    # Add players to servers
+    for player in players:
+        if player.serverId == 1:
+            server_1.add_player(player)
+        else:
+            server_2.add_player(player)
+
+    # Start matchmaking on both servers
+    server_1.start_matchmaking()
+    server_2.start_matchmaking()
+
+
+if __name__ == "__main__":
+    simulate_game_server()

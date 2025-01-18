@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from matchmaking_service import MatchmakingService
 from models import Player, Match
-from config import Config
+from app_config import Config
+from typing import Optional
 
 app = FastAPI()
 matchmaking_service = MatchmakingService(max_players_per_match=Config.MAX_PLAYERS_PER_MATCH, level_range=Config.LEVEL_RANGE)

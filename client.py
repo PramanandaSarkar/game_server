@@ -1,7 +1,7 @@
 import requests
 import random
 import time
-from config import Config
+from app_config import Config
 
 class MatchmakingClient:
     def __init__(self, server_url: str = "http://localhost:8000"):
