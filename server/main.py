@@ -1,6 +1,9 @@
 from enum import Enum
 from typing import List, Dict, Optional
 from datetime import datetime
+from fastapi import FastAPI
+
+
 
 # Global Configurations
 class GlobalConfig:
@@ -179,6 +182,11 @@ def simulate_game_server():
     # Start matchmaking on both servers
     server_1.start_matchmaking()
     server_2.start_matchmaking()
+
+app = FastAPI()
+@app.get('/')
+def home():
+    return "home page"
 
 
 if __name__ == "__main__":
