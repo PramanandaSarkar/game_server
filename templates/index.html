@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Interface</title>
+  <script>
+    async function getClients() {
+      const response = await fetch("/get_clients");
+      const result = await response.json();
+      const clientsList = document.getElementById("clients");
+      clientsList.innerHTML = ""; // Clear the list
+      if (result.clients.length > 0) {
+        result.clients.forEach(client => {
+          const option = document.createElement("option");
+          option.value = client;
+          option.textContent = client;
+          clientsList.appendChild(option);
+        });
+      } else {
+        alert("No active clients available.");
+      }
+    }
+
+    async function connectToPeer() {
+      const selectedClient = document.getElementById("clients").value;
+      if (!selectedClient) {
+        alert("Please select a client to connect.");
+        return;
+      }
+      const [peer_ip, peer_port] = selectedClient.split(":");
+      const response = await fetch("/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ peer_ip, peer_port }),
+      });
+      const result = await response.json();
+      alert(result.message || result.error);
+    }
+
+    async function sendMessage() {
+      const message = document.getElementById("message").value;
+      if (!message) {
+        alert("Please enter a message.");
+        return;
+      }
+      const response = await fetch("/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      const result = await response.json();
+      alert(result.message || result.error);
+    }
+  </script>
+</head>
+<body>
+  <h1>Client Interface</h1>
+  <button onclick="getClients()">Get Active Clients</button>
+  <select id="clients"></select>
+  <button onclick="connectToPeer()">Connect to Peer</button>
+  <hr>
+  <textarea id="message" placeholder="Enter your message here"></textarea>
+  <button onclick="sendMessage()">Send Message</button>
+</body>
+</html>
