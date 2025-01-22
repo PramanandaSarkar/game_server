@@ -5,7 +5,7 @@ def get_all_players(db: Session):
     return db.query(Player).all()
 
 def create_player(db: Session, name: str, server_id: int):
-    new_player = Player(name=name, server_id=server_id, level=0, match_history="")
+    new_player = Player(name=name, server_id=server_id)
     db.add(new_player)
     db.commit()
     db.refresh(new_player)
