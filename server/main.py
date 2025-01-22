@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-from routes import player, match, server
+from config.database import Base, engine
+from routes import player 
+from routes import match
+from routes import server
+
+
+
+# Initialize the database
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -24,4 +31,7 @@ def introduction():
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    # make redirected to /docs
+    # uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    # redirec_to_docs = True
 
