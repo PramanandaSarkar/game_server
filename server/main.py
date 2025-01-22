@@ -4,7 +4,8 @@ from config.database import Base, engine
 from routes import player 
 from routes import match
 from routes import server
-
+import uvicorn
+from fastapi.responses import RedirectResponse
 
 
 # Initialize the database
@@ -26,8 +27,8 @@ app.include_router(match.router)
 app.include_router(server.router)
 
 @app.get("/")
-def introduction():
-    return {"message": "Server API running..."}
+def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
