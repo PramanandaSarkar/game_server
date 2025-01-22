@@ -22,6 +22,9 @@ def add_player_to_match(db: Session, player: Player, match: Match):
 def get_active_match(db: Session):
     return db.query(Match).filter(Match.status == "waiting").first()
 
+def get_match_by_id(db: Session, match_id: int):
+    return db.query(Match).filter(Match.id == match_id).first()
+
 def start_match(db: Session, match: Match):
     match.status = "in_progress"
     db.commit()
