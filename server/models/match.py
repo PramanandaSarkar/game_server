@@ -8,3 +8,5 @@ class Match(Base):
     status = Column(String, default="waiting")
     player_count = Column(Integer, default=0)
     players = relationship("Player", back_populates="match")
+
+    chat_messages = relationship("ChatMessage", back_populates="match")

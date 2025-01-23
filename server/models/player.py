@@ -12,3 +12,4 @@ class Player(Base):
     last_match_history = Column(String, default="LOSE")
     match_id = Column(Integer, ForeignKey("matchs.id"))
     match = relationship("Match", back_populates="players")
+    chat_messages = relationship("ChatMessage", back_populates="player")
