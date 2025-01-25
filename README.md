@@ -1,5 +1,5 @@
 #  Match making service 
-a simulation of real time match making service .
+a simulation of real time match making and messaging service .
 
 ## technology 
 1. Fast api to built the service
