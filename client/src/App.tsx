@@ -10,7 +10,7 @@ function App() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/game/:players/:matchId" element={<GuessingGame />} />
+          <Route path="/game/:players" element={<GuessingGame />} />
         </Routes>
       </div>
     </Router>
