@@ -1,37 +1,20 @@
+import './App.css';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import GuessingGame from './pages/GuessingGame';
 
-import './App.css'
 
 function App() {
-
-
   return (
-    <>  
-      <div>
-        {/* Game menu */}
-        <div>
-          <h1>Games</h1>
-          <div>
-            <h2>Guessing Game</h2>
-            <h3>2 player</h3>
-            <h3>4 player</h3>
-            <h3>6 player</h3>
-            <h3>10 player</h3>
-          </div>
-        </div>
-        {/* profile details */}
-        <div>
-          <h1>Profile</h1>
-          <div>
-            <h2>Username</h2>
-            <h2>Rank</h2>
-            <h2>Id</h2>
-            <h2>ServerId</h2>
-          </div>
-        </div>
+    <Router>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/game/:players/:matchId" element={<GuessingGame />} />
+        </Routes>
       </div>
-
-    </>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;

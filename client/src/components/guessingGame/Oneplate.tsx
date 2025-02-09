@@ -1,11 +1,7 @@
-import React from 'react'
-
-type Props = {}
-
-function Oneplate({}: Props) {
+function Oneplate() {
   return (
-    <div>Oneplate</div>
-  )
+    <div className="p-4 bg-gray-300 text-center rounded-lg">Guess Slot</div>
+  );
 }
 
-export default Oneplate
+export default Oneplate;
