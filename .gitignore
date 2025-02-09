@@ -1,33 +1,3 @@
-# Python-related
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual environment
-venv/
-env/
-
-# Environment variables file (if used)
-.env
-
-# Docker
-.dockerignore
-
-# Logs and output files
-*.log
-*.out
-
-# Compiled files
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Miscellaneous
-.idea/
-.vscode/
-.vercel
 
 
 ./node_modules/
