@@ -1,16 +1,22 @@
-
 function Profile() {
-    return (
-      <div className="bg-white p-4 shadow rounded-lg">
-        <h1 className="text-xl font-bold mb-4">Player Profile</h1>
-        <div>
-          <h2>Username: Player1</h2>
-          <h2>Rank: Gold</h2>
-          <h2>ID: 12345</h2>
-          <h2>Server ID: ABCD</h2>
-        </div>
+  return (
+    <div className="p-4 rounded-lg shadow-lg max-w-sm mx-auto bg-white">
+      <h1 className="text-xl font-bold mb-4 text-center">Player Profile</h1>
+      <div className="grid grid-cols-2 gap-y-3">
+        <h2 className="text-gray-600 font-medium">Name:</h2>
+        <h2 className="font-bold text-gray-800">Alan</h2>
+
+        <h2 className="text-gray-600 font-medium">Rank:</h2>
+        <h2 className="font-bold text-gray-800">1</h2>
+
+        <h2 className="text-gray-600 font-medium">ID:</h2>
+        <h2 className="font-bold text-gray-800">1</h2>
+
+        <h2 className="text-gray-600 font-medium">Server ID:</h2>
+        <h2 className="font-bold text-gray-800">1</h2>
       </div>
-    );
-  }
-  
-  export default Profile;
+    </div>
+  );
+}
+
+export default Profile;
