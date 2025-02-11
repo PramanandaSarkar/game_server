@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axios from "axios";
+// import { API_URL } from "../config"; // Import API_URL
 
-const API_URL = "http://localhost:4000/auth";
 
+import { API_URL }  from "../config.ts";
 function HomePage() {
   const [userId, setUserId] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate(); // Initialize navigate function
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -23,11 +26,12 @@ function HomePage() {
         return;
       }
 
-      const response = await axios.post(`${API_URL}/login`, { userId });
+      const response = await axios.post(`${API_URL}/auth/login`, { userId });
 
       if (response.data.userId) {
         localStorage.setItem("userId", response.data.userId);
         setLoggedIn(true);
+        navigate("/game"); // Redirect to /game after login
       }
     } catch (err) {
       setError("Login failed. User not found.");

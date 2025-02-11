@@ -23,4 +23,21 @@ router.get("/", async (_, res) => {
     }
 });
 
+
+router.get("/:id", async (req, res) => {
+    try {
+        const db = await dbPromise; // Await db instance
+        const player = await db.get("SELECT * FROM players WHERE id = ?", [req.params.id]);
+
+        if (!player) {
+            return res.status(404).json({ error: "Player not found" });
+        }
+
+        res.json(player);
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 module.exports = router;
