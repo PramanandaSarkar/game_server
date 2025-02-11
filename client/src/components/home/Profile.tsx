@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { getUserDetails } from "../../api/player/profileData.ts"; // Import API function
 
 function Profile() {
-  const [user, setUser] = useState<{ name: string; rank: number; id: number; serverId: number } | null>(null);
+  const [user, setUser] = useState<{ name: string; rank: number; id: number; server_id: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,7 +39,10 @@ function Profile() {
         <h2 className="font-bold text-gray-800">{user.id}</h2>
 
         <h2 className="text-gray-600 font-medium">Server ID:</h2>
-        <h2 className="font-bold text-gray-800">{user.serverId}</h2>
+        <h2 className="font-bold text-gray-800">{user.server_id}</h2>
+        <div>
+          
+        </div>
       </div>
     </div>
   );
