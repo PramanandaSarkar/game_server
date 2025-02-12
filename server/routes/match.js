@@ -10,35 +10,26 @@ const matches = [];
 const matchMake = async () => {
     const db = await dbPromise;
     const matchTypes = { "2P": 2, "4P": 4, "6P": 6, "10P": 10 };
-    
+
     for (const [matchType, playerCount] of Object.entries(matchTypes)) {
         const players = [...playerQueue.values()].filter(p => p.matchType === matchType);
 
         if (players.length >= playerCount) {
-            // Create a match with the required number of players
             const matchedPlayers = players.slice(0, playerCount);
             const playerIds = matchedPlayers.map(p => p.playerId);
 
-            // create two team from the players and assign them red or blue team  after that guess a number (1-9) randomly for this match
-            // half player will be in red team and half player will be in blue team
             const redTeam = playerIds.slice(0, playerCount / 2);
             const blueTeam = playerIds.slice(playerCount / 2);
-            const team = { redTeam, blueTeam };
+
+            const matchId = Date.now() + Math.floor(Math.random() * 1000);
             const Answer = Math.floor(Math.random() * 9) + 1;
-            const matchId = Math.floor(Math.random() * 1000000);
-            // save matches in a list for later use
-            matches.push({ matchId, team, Answer });
+            
+            const score = { redTeamScore: [], blueTeamScore: [] };
 
-
-            // // Store match in the database
-            // const result = await db.run(
-            //     `INSERT INTO matches (matchType, players) VALUES (?, ?)`,
-            //     [matchType, JSON.stringify(playerIds)]
-            // );
+            matches.push({ matchId, team: { redTeam, blueTeam }, Answer, score });
 
             console.log(`Match created: ${matchType}, Players: ${playerIds}`);
 
-            // Remove matched players from the queue
             for (const player of matchedPlayers) {
                 playerQueue.delete(player.playerId);
             }
@@ -123,7 +114,56 @@ router.post("/match-start", (req, res) => {
 })
 
 router.post("/submit-guess", (req, res) => {
+    const { matchId, playerId, guess } = req.body;
 
-})
+    const match = matches.find((m) => m.matchId === matchId);
+    if (!match) {
+        return res.status(404).json({ error: "Match not found" });
+    }
+
+    // Ensure `team` object exists
+    if (!match.team || !match.team.redTeam || !match.team.blueTeam) {
+        return res.status(500).json({ error: "Match teams not properly set" });
+    }
+
+    const score = {
+        playerId: playerId,
+        guess: parseInt(guess)
+    };
+
+    if (match.team.redTeam.includes(playerId)) {
+        match.score.redTeamScore.push(score);
+    } else if (match.team.blueTeam.includes(playerId)) {
+        match.score.blueTeamScore.push(score);
+    } else {
+        return res.status(400).json({ error: "Player is not in this match" });
+    }
+
+    return res.json({ message: "Guess submitted successfully", match });
+});
+
+router.post("/get-result", (req, res) => {
+    const { matchId } = req.body;
+    const match = matches.find((m) => m.matchId === matchId);
+    if (!match) {
+        return res.status(404).json({ error: "Match not found" });
+    }
+
+    if (match.score.redTeamScore.length != match.team.redTeam.length || match.score.blueTeamScore.length != match.team.blueTeam.length) {
+        return res.status(400).json({ error: "All players have not submitted their guesses" });
+    }
+    
+    const redTeamScore = match.score.redTeamScore.reduce((total, score) => total + score.guess, 0);
+    const blueTeamScore = match.score.blueTeamScore.reduce((total, score) => total + score.guess, 0);
+
+    if (redTeamScore > blueTeamScore) {
+        return res.json({ winner: "Red Team", score: {redTeamScore, blueTeamScore} });
+    } else if (blueTeamScore > redTeamScore) {
+        return res.json({ winner: "Blue Team", score: {redTeamScore, blueTeamScore} });
+    } else {
+        return res.json({ winner: "Draw", score: {redTeamScore, blueTeamScore} });
+    }
+});
+
 
 module.exports = router;
