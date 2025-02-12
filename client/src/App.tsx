@@ -1,8 +1,9 @@
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import GuessingGame from './pages/GuessingGame';
 import ProfilePage from './pages/ProfilePage';
+import WaitingPage from './pages/WaitingPage';
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/game" element={<ProfilePage />} />
           <Route path="/game/:players" element={<GuessingGame />} />
+          <Route path="/game/waiting" element={<WaitingPage />} />
         </Routes>
       </div>
     </Router>
