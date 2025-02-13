@@ -1,79 +1,97 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import axios from "axios";
-// import { API_URL } from "../config"; // Import API_URL
+import { useState } from "react";
+import { redirect } from "react-router-dom";
 
-
-import { API_URL }  from "../config.ts";
 function HomePage() {
   const [userId, setUserId] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate(); // Initialize navigate function
+  const [inputUserId, setInputUserId] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId);
-      setLoggedIn(true);
-    }
-  }, []);
-
-  const handleLogin = async () => {
-    try {
-      if (!userId.trim()) {
-        setError("User ID cannot be empty.");
-        return;
-      }
-
-      const response = await axios.post(`${API_URL}/auth/login`, { userId });
-
-      if (response.data.userId) {
-        localStorage.setItem("userId", response.data.userId);
-        setLoggedIn(true);
-        navigate("/game"); // Redirect to /game after login
-      }
-    } catch (err) {
-      setError("Login failed. User not found.");
-      console.error(err);
-    }
+  // Simulate API call to get new User ID
+  const generateNewUserId = async () => {
+    // try {
+    //   const response = await fetch("http://localhost:5000/api/new-user-id"); // Change URL as needed
+    //   const data = await response.json();
+    //   setUserId(data.userId);
+    //   setErrorMessage(""); // Clear any previous error
+    // } catch (error) {
+    //   setErrorMessage("Failed to get a new User ID. Try again.");
+    // }
+    setUserId((Math.floor(Math.random() * 100000)).toString())
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("userId");
-    setUserId("");
-    setLoggedIn(false);
+  // Simulate login function
+  const handleLogin = async () => {
+    if (!inputUserId) {
+      setErrorMessage("Please enter a valid User ID.");
+      return;
+    }
+    console.log(inputUserId)
+    try {
+      const response = await fetch(`http://localhost:4000/player/${inputUserId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }        
+      });
+
+      const data = await response.json();
+      console.log(data)
+      if (response.ok) {
+        setErrorMessage("");
+        // alert("Login successful!"); // You can replace this with navigation
+        localStorage.setItem("userId", data.id);
+        redirect("/game");
+
+      } else {
+        setErrorMessage(data.message || "Invalid User ID. Try again.");
+      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setErrorMessage("Login failed. Please try again.");
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="mb-8">
-        <img src="/vite.svg" width={100} height={100} alt="hero" />
-      </div>
-      <div className="p-4 bg-gray-100 rounded-lg shadow-md text-center">
-        {loggedIn ? (
-          <>
-            <h1 className="text-2xl mb-4">Welcome, {userId}!</h1>
-            <button className="p-2 bg-red-500 text-white rounded" onClick={handleLogout}>
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <h1 className="text-3xl mb-4">Login</h1>
-            <input
-              type="text"
-              className="p-2 border rounded mb-2"
-              placeholder="Enter your ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-            />
-            <button className="p-2 bg-blue-500 text-white rounded" onClick={handleLogin}>
-              Login
-            </button>
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-          </>
+    <div className="flex justify-center items-center ">
+      <div className="w-[400px] p-6 bg-white shadow-lg rounded-xl">
+        <h1 className="text-2xl font-semibold text-center text-black mb-4">
+          Log In to the Game
+        </h1>
+
+        <div className="flex flex-col">
+          <label className="text-black font-medium mb-1">User ID</label>
+          <input
+            type="text"
+            placeholder="Enter user ID"
+            value={inputUserId}
+            onChange={(e) => setInputUserId(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none text-black"
+          />
+          <button
+            onClick={handleLogin}
+            className="mt-4 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-900 transition"
+          >
+            Login
+          </button>
+        </div>
+
+        {errorMessage && (
+          <p className="text-red-600 text-center mt-4">{errorMessage}</p>
         )}
+
+        <div className="mt-6 text-center">
+          <p className="text-black">Don't have a User ID?</p>
+          <button
+            onClick={generateNewUserId}
+            className="mt-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition"
+          >
+            Get New User ID
+          </button>
+
+          {userId && (
+            <p className="mt-2 text-black">
+              Your new User ID: <span className="font-semibold">{userId}</span>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
