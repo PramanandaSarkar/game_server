@@ -25,7 +25,8 @@ function ProfilePage() {
   const userId = localStorage.getItem("userId"); // Assuming user ID is stored in localStorage
   const [selectedType, setSelectedType] = useState<string>("");
   const [waiting, setWaiting] = useState<boolean>(false);
-  const [match, setMatch] = useState< any | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [match, setMatch] = useState< any >(null);
   const navigate = useNavigate();
 
   useEffect(() => {
