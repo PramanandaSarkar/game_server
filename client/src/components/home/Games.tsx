@@ -7,7 +7,7 @@ function Games() {
   const [gameId, setGameId] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
 
-  const joinGame = async (playerCount) => {
+  const joinGame = async (playerCount: number) => {
     setWaiting(true);
     try {
       const response = await fetch('http://localhost:5000/join-game', {
@@ -42,9 +42,9 @@ function Games() {
   }, [gameStarted, gameId, navigate]);
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h1 className="text-xl font-bold mb-4 text-center">Game Menu</h1>
-      <div className="bg-white shadow-md rounded-lg p-4">
+    <div className="w-1/2 p-4 border rounded-lg">
+      
+      
         <h2 className="text-lg font-semibold mb-3 text-center">Guessing Game</h2>
         <div className="grid grid-cols-2 gap-4">
           {[2, 4, 6, 10].map((count) => (
@@ -58,7 +58,7 @@ function Games() {
             </button>
           ))}
         </div>
-      </div>
+      
     </div>
   );
 }
