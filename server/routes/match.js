@@ -25,17 +25,35 @@ const matchMake = async () => {
             const Answer = Math.floor(Math.random() * 9) + 1;
             
             const score = { redTeamScore: [], blueTeamScore: [] };
+            match = { matchId, team: { redTeam, blueTeam }, Answer, score };
+            matches.push(match);
 
-            matches.push({ matchId, team: { redTeam, blueTeam }, Answer, score });
-
-            console.log(`Match created: ${matchType}, Players: ${playerIds}`);
+            console.log(`${match} is created`);
 
             for (const player of matchedPlayers) {
                 playerQueue.delete(player.playerId);
             }
+            return match;
         }
     }
+    return {}
 };
+
+const findMatch = (playerId) => {
+    for (const match of matches) {
+        for (const player of match.team.redTeam) {
+            if (player == playerId) {
+                return match;
+            }
+        }
+        for (const player of match.team.blueTeam) {
+            if (player == playerId) {
+                return match;
+            }
+        }
+    }
+    return null;
+}
 
 // Get all matches from the database
 router.get("/", async (_, res) => {
@@ -104,13 +122,29 @@ router.post("/leave", (req, res) => {
 router.post("/match-start", (req, res) => {
     const { playerId } = req.body;
     const inMatch = false;
-    for (const match of matches) {
-        if (match.redTeam.includes(playerId) || match.blueTeam.includes(playerId)) {
-            inMatch = true;
-            return res.json({inMatch, match});
+    // find player in playerQueue
+    for (const player of playerQueue.values()) {
+        if (player.playerId === playerId) {
+            return res.json({inMatch});
         }
     }
-    return res.json({ inMatch }); 
+    // find player in matches
+    // for (const match of matches) {
+    //     if (match.redTeam.includes(playerId) || match.blueTeam.includes(playerId)) {
+    //         inMatch = true;
+    //         return res.json({inMatch, match});
+    //     }
+    // }
+    // matchMake();
+    // matchId = findMatch(playerId).matchId;
+    match = matchMake(playerId);
+    if (!match) {
+        return res.json({inMatch});
+    }
+    matchId = match.matchId;
+
+    inMatch = true;
+    return res.json({ inMatch, matchId }); 
 })
 
 router.post("/submit-guess", (req, res) => {
