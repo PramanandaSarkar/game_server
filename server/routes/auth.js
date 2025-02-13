@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import { dbPromise } from "../db.js";
 const router = express.Router();
-const dbPromise = require("../db/db");
+
 
 // Login route
 router.post("/login", async (req, res) => {
@@ -30,4 +31,4 @@ router.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logout successful" });
 });
 
-module.exports = router;
+export default router;

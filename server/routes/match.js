@@ -1,197 +1,23 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const dbPromise = require("../db/db");
 
-// Store players in a queue using a Map (playerId as key)
-const playerQueue = new Map();
-const matches = [];
-
-// Matchmaking function
-const matchMake = async () => {
-    const db = await dbPromise;
-    const matchTypes = { "2P": 2, "4P": 4, "6P": 6, "10P": 10 };
-
-    for (const [matchType, playerCount] of Object.entries(matchTypes)) {
-        const players = [...playerQueue.values()].filter(p => p.matchType === matchType);
-
-        if (players.length >= playerCount) {
-            const matchedPlayers = players.slice(0, playerCount);
-            const playerIds = matchedPlayers.map(p => p.playerId);
-
-            const redTeam = playerIds.slice(0, playerCount / 2);
-            const blueTeam = playerIds.slice(playerCount / 2);
-
-            const matchId = Date.now() + Math.floor(Math.random() * 1000);
-            const Answer = Math.floor(Math.random() * 9) + 1;
-            
-            const score = { redTeamScore: [], blueTeamScore: [] };
-            match = { matchId, team: { redTeam, blueTeam }, Answer, score };
-            matches.push(match);
-
-            console.log(`${match} is created`);
-
-            for (const player of matchedPlayers) {
-                playerQueue.delete(player.playerId);
-            }
-            return match;
-        }
-    }
-    return {}
-};
-
-const findMatch = (playerId) => {
-    for (const match of matches) {
-        for (const player of match.team.redTeam) {
-            if (player == playerId) {
-                return match;
-            }
-        }
-        for (const player of match.team.blueTeam) {
-            if (player == playerId) {
-                return match;
-            }
-        }
-    }
-    return null;
-}
-
-// Get all matches from the database
-router.get("/", async (_, res) => {
-    try {
-        const db = await dbPromise;
-        const matches = await db.all("SELECT * FROM matches");
-        res.json(matches);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+// ✅ Use ES module imports instead of require
+import { getQueuedPlayers, runningMatches, joinGame, leaveQueue, matchStart } from "../controllers/match/matchCreate.controller.js";
+import { submitGuess, getResult } from "../controllers/match/matchResult.controller.js";
 
 // Get all players in the queue
-router.get("/queue", (_, res) => {
-    res.json([...playerQueue.values()]);
-});
-
-router.get("/matches", (_, res) => {
-    res.json(matches);
-});
-
-
+router.get("/queue", getQueuedPlayers);
+// Get all running matches
+router.get("/matches", runningMatches);
 // Add a player to the queue
-router.post("/join", async (req, res) => {
-    try {
-        const { playerId, matchType } = req.body;
-        if (!playerId || !matchType) {
-            return res.status(400).json({ error: "playerId and matchType are required" });
-        }
-
-        if (playerQueue.has(playerId)) {
-            return res.status(400).json({ error: "Player already in the queue" });
-        }
-
-        // Add player to queue
-        playerQueue.set(playerId, { playerId, matchType });
-
-        // Check for matchmaking
-        await matchMake();
-
-        res.json({ message: `${playerId} added to the queue` });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
+router.post("/join", joinGame);
 // Remove a player from the queue
-router.post("/leave", (req, res) => {
-    try {
-        const { playerId } = req.body;
-        if (!playerId) {
-            return res.status(400).json({ error: "playerId is required" });
-        }
-
-        if (playerQueue.has(playerId)) {
-            playerQueue.delete(playerId);
-            return res.json({ message: `${playerId} removed from the queue` });
-        } else {
-            return res.status(404).json({ error: "Player not found in queue" });
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
+router.post("/leave", leaveQueue);
 // Check if player is in a match
-router.post("/match-start", async (req, res) => {
-    let { playerId } = req.body;
-    let inMatch = false;  // Use let instead of const to allow reassignment
-    let match = findMatch(playerId);
+router.post("/match-start", matchStart);
+// Submit a guess
+router.post("/submit-guess", submitGuess);
+// Get the result
+router.post("/get-result", getResult);
 
-    if (match) {
-        inMatch = true;
-        return res.json({ inMatch, matchId: match.matchId });
-    }
-
-    // Player not found in existing matches, create new match
-    match = await matchMake();
-    if (!match) {
-        return res.json({ inMatch: false });
-    }
-
-    inMatch = true;
-    return res.json({ inMatch, matchId: match.matchId });
-});
-
-
-router.post("/submit-guess", (req, res) => {
-    const { matchId, playerId, guess } = req.body;
-
-    const match = matches.find((m) => m.matchId === matchId);
-    if (!match) {
-        return res.status(404).json({ error: "Match not found" });
-    }
-
-    // Ensure `team` object exists
-    if (!match.team || !match.team.redTeam || !match.team.blueTeam) {
-        return res.status(500).json({ error: "Match teams not properly set" });
-    }
-
-    const score = {
-        playerId: playerId,
-        guess: parseInt(guess)
-    };
-
-    if (match.team.redTeam.includes(playerId)) {
-        match.score.redTeamScore.push(score);
-    } else if (match.team.blueTeam.includes(playerId)) {
-        match.score.blueTeamScore.push(score);
-    } else {
-        return res.status(400).json({ error: "Player is not in this match" });
-    }
-
-    return res.json({ message: "Guess submitted successfully", match });
-});
-
-router.post("/get-result", (req, res) => {
-    const { matchId } = req.body;
-    const match = matches.find((m) => m.matchId === matchId);
-    if (!match) {
-        return res.status(404).json({ error: "Match not found" });
-    }
-
-    if (match.score.redTeamScore.length != match.team.redTeam.length || match.score.blueTeamScore.length != match.team.blueTeam.length) {
-        return res.status(400).json({ error: "All players have not submitted their guesses" });
-    }
-    
-    const redTeamScore = match.score.redTeamScore.reduce((total, score) => total + score.guess, 0);
-    const blueTeamScore = match.score.blueTeamScore.reduce((total, score) => total + score.guess, 0);
-
-    if (redTeamScore > blueTeamScore) {
-        return res.json({ winner: "Red Team", score: {redTeamScore, blueTeamScore} });
-    } else if (blueTeamScore > redTeamScore) {
-        return res.json({ winner: "Blue Team", score: {redTeamScore, blueTeamScore} });
-    } else {
-        return res.json({ winner: "Draw", score: {redTeamScore, blueTeamScore} });
-    }
-});
-
-
-module.exports = router;
+export default router;

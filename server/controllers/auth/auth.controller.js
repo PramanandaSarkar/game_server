@@ -1,4 +1,4 @@
-const dbPromise = require("../../db/db");
+import dbPromise from "../../db/db.js"; 
 
 const getAllPlayers = async (req, res) => {
     try {
@@ -12,7 +12,7 @@ const getAllPlayers = async (req, res) => {
 
 const getPlayerById = async (req, res) => {
     try {
-        const db = await dbPromise; // Await db instance
+        const db = await dbPromise;
         const player = await db.get("SELECT * FROM players WHERE id = ?", [req.params.id]);
 
         if (!player) {
@@ -24,19 +24,18 @@ const getPlayerById = async (req, res) => {
         console.error("Database error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
-}
-
+};
 
 const createPlayer = async (req, res) => {
     const { id, name, rank, server_id } = req.body;
     try {
-        const db = await dbPromise; // Await db instance
+        const db = await dbPromise;
         await db.run("INSERT INTO players (id, name, rank, server_id) VALUES (?, ?, ?, ?)", [id, name, rank, server_id]);
         res.json({ message: "Player added successfully" });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
-}
+};
 
 
-module.exports = { getAllPlayers, getPlayerById, createPlayer };
+export { getAllPlayers, getPlayerById, createPlayer };
