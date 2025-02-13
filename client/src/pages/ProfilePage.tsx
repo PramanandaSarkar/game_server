@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import apiClient from "../api/api";
+import { useNavigate } from "react-router-dom";
+
 
 type User = {
   id: string;
@@ -24,6 +26,7 @@ function ProfilePage() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [waiting, setWaiting] = useState<boolean>(false);
   const [match, setMatch] = useState< any | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (userId) {
@@ -63,6 +66,10 @@ function ProfilePage() {
             setWaiting(false);
             // set matchId to localStroage
             localStorage.setItem("matchId", matchResponse.data.matchId);
+            console.log("Match found:", matchResponse.data.match);
+            // go the page of the match
+            const matchId = matchResponse.data.matchId.toString();
+            navigate(`/game/${matchId}`);
           }
         } catch (error) {
           console.error("Error checking match status:", error);

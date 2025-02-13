@@ -13,8 +13,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/game" element={<ProfilePage />} />
-          <Route path="/game/:players" element={<GuessingGame />} />
-          <Route path="/game/waiting" element={<WaitingPage />} />
+          <Route path="/game/:matchId" element={<GuessingGame />} />
+          {/* <Route path="/game/waiting" element={<WaitingPage />} /> */}
           {/* <Route path='/game/' /> */}
         </Routes>
       </div>

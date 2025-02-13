@@ -119,33 +119,27 @@ router.post("/leave", (req, res) => {
     }
 });
 
-router.post("/match-start", (req, res) => {
-    const { playerId } = req.body;
-    const inMatch = false;
-    // find player in playerQueue
-    for (const player of playerQueue.values()) {
-        if (player.playerId === playerId) {
-            return res.json({inMatch});
-        }
+// Check if player is in a match
+router.post("/match-start", async (req, res) => {
+    let { playerId } = req.body;
+    let inMatch = false;  // Use let instead of const to allow reassignment
+    let match = findMatch(playerId);
+
+    if (match) {
+        inMatch = true;
+        return res.json({ inMatch, matchId: match.matchId });
     }
-    // find player in matches
-    // for (const match of matches) {
-    //     if (match.redTeam.includes(playerId) || match.blueTeam.includes(playerId)) {
-    //         inMatch = true;
-    //         return res.json({inMatch, match});
-    //     }
-    // }
-    // matchMake();
-    // matchId = findMatch(playerId).matchId;
-    match = matchMake(playerId);
+
+    // Player not found in existing matches, create new match
+    match = await matchMake();
     if (!match) {
-        return res.json({inMatch});
+        return res.json({ inMatch: false });
     }
-    matchId = match.matchId;
 
     inMatch = true;
-    return res.json({ inMatch, matchId }); 
-})
+    return res.json({ inMatch, matchId: match.matchId });
+});
+
 
 router.post("/submit-guess", (req, res) => {
     const { matchId, playerId, guess } = req.body;
