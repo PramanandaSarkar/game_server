@@ -120,4 +120,4 @@ const leaveQueue = (req, res) => {
     }
 }
 
-module.exports = { getQueuedPlayers, runningMatches, joinGame, matchStart, leaveQueue };
+export { getQueuedPlayers, runningMatches, joinGame, matchStart, leaveQueue };

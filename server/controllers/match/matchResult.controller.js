@@ -54,9 +54,7 @@ const getResult = async (req, res) => {
         return res.json({ winner: "Draw", score: {redTeamScore, blueTeamScore} });
     }
 }
-
-
-module.exports = {
+export {
     submitGuess,
     getResult
 }

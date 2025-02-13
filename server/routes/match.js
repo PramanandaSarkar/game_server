@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 
-// ✅ Use ES module imports instead of require
+
 import { getQueuedPlayers, runningMatches, joinGame, leaveQueue, matchStart } from "../controllers/match/matchCreate.controller.js";
 import { submitGuess, getResult } from "../controllers/match/matchResult.controller.js";
 

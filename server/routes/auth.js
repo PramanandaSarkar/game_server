@@ -1,5 +1,5 @@
 import express from "express";
-import { dbPromise } from "../db.js";
+import dbPromise  from "../db/db.js";
 const router = express.Router();
 
 

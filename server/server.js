@@ -2,9 +2,9 @@
 import express from 'express';
 import cors from 'cors';
 import playerRoutes  from './routes/player.js';
-import {homeRoutes} from './routes/home.js';
-import {matchRoutes} from './routes/match.js';
-import {authRoutes} from './routes/auth.js';
+import homeRoutes from './routes/home.js';
+import matchRoutes from './routes/match.js';
+import authRoutes from './routes/auth.js';
 
 
 // const playerRoutes = require('./routes/player');

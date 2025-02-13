@@ -1,4 +1,4 @@
 let playerQueue = new Map();
 let matches = [];
-
-module.exports = { playerQueue, matches };
+let data = { playerQueue, matches };
+export default data;
