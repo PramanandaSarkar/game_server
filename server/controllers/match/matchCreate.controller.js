@@ -27,10 +27,10 @@ const matchMake = async () => {
             const Answer = Math.floor(Math.random() * 9) + 1;
             
             const score = { redTeamScore: [], blueTeamScore: [] };
-            match = { matchId, team: { redTeam, blueTeam }, Answer, score };
+            const match = { matchId, team: { redTeam, blueTeam }, Answer, score };
             data.matches.push(match);
 
-            console.log(`${match} is created`);
+            console.log(`${match.matchId} match is created`);
 
             for (const player of matchedPlayers) {
                 data.playerQueue.delete(player.playerId);
@@ -72,7 +72,7 @@ const joinGame = async (req, res) => {
         data.playerQueue.set(playerId, { playerId, matchType });
 
         // Check for matchmaking
-        await matchMake();
+        // await matchMake();
 
         res.json({ message: `${playerId} added to the queue` });
     } catch (err) {
