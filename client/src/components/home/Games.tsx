@@ -19,6 +19,7 @@ const Games = () => {
       if (res.data.inMatch) {
         setMatch(res.data.match);
         localStorage.setItem("matchId", res.data.matchId);
+        localStorage.setItem("teamName", res.data.teamName);
         navigate(`/game/${res.data.matchId}`);
       }
     } catch (error) {

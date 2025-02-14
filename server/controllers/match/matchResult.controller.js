@@ -15,45 +15,69 @@ const submitGuess = async (req, res) => {
         return res.status(500).json({ error: "Match teams not properly set" });
     }
 
+    // Ensure `score` object exists
+    if (!match.score) {
+        match.score = { redTeamScore: [], blueTeamScore: [] };
+    }
+
     const score = {
-        playerId: playerId,
-        guess: parseInt(guess)
+        playerId,
+        guess: parseInt(guess, 10)
     };
 
+    // Check if player already submitted a guess
+    const hasSubmitted = match.score.redTeamScore.some(s => s.playerId === playerId) ||
+                         match.score.blueTeamScore.some(s => s.playerId === playerId);
+
+    if (hasSubmitted) {
+        return res.status(400).json({ error: "Player has already submitted a guess" });
+    }
+
+    // Assign guess to correct team
     if (match.team.redTeam.includes(playerId)) {
         match.score.redTeamScore.push(score);
     } else if (match.team.blueTeam.includes(playerId)) {
         match.score.blueTeamScore.push(score);
     } else {
-        return res.status(400).json({ error: "Player is not in this match" });
+        return res.status(403).json({ error: "Player is not in this match" });
     }
 
-    return res.json({ message: "Guess submitted successfully", match });
-}
+    return res.status(200).json({ message: "Guess submitted successfully", match });
+};
 
 
 const getResult = async (req, res) => {
     const { matchId } = req.body;
     const match = data.matches.find((m) => m.matchId === matchId);
+
     if (!match) {
         return res.status(404).json({ error: "Match not found" });
     }
 
-    if (match.score.redTeamScore.length != match.team.redTeam.length || match.score.blueTeamScore.length != match.team.blueTeam.length) {
-        return res.status(400).json({ error: "All players have not submitted their guesses" });
+    // Ensure all players have submitted guesses
+    if (
+        match.score.redTeamScore.length !== match.team.redTeam.length ||
+        match.score.blueTeamScore.length !== match.team.blueTeam.length
+    ) {
+        return res.status(400).json({ error: "All players have not submitted their guesses yet" });
     }
-    
+
+    // Calculate team scores
     const redTeamScore = match.score.redTeamScore.reduce((total, score) => total + score.guess, 0);
     const blueTeamScore = match.score.blueTeamScore.reduce((total, score) => total + score.guess, 0);
 
+    let winner;
     if (redTeamScore > blueTeamScore) {
-        return res.json({ winner: "Red Team", score: {redTeamScore, blueTeamScore} });
+        winner = "Red Team";
     } else if (blueTeamScore > redTeamScore) {
-        return res.json({ winner: "Blue Team", score: {redTeamScore, blueTeamScore} });
+        winner = "Blue Team";
     } else {
-        return res.json({ winner: "Draw", score: {redTeamScore, blueTeamScore} });
+        winner = "Draw";
     }
-}
+
+    return res.json({ winner, score: { redTeamScore, blueTeamScore } });
+};
+
 const findMatchById = async (req, res) => {
     const { matchId, playerId } = req.body;
     const match = data.matches.find((m) => m.matchId === matchId);

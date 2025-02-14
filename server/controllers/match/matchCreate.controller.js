@@ -65,11 +65,12 @@ const joinGame = async (req, res) => {
         }
 
         if (data.playerQueue.has(playerId)) {
-            return res.status(400).json({ error: "Player already in the queue" });
+            return res.status(200).json({ error: "Player already in the queue" });
         }
 
         // Add player to queue
         data.playerQueue.set(playerId, { playerId, matchType });
+        console.log(`${playerId} added to the queue`);
 
         // Check for matchmaking
         // await matchMake();
@@ -90,7 +91,14 @@ const matchStart = async (req, res) => {
         return res.json({ inMatch });
     }
     inMatch = true;
-    return res.json({ inMatch, matchId: match.matchId });
+    let teamName = "";
+    if (match.team.redTeam.includes(playerId)) {
+        teamName = "red";
+    }
+    else if (match.team.blueTeam.includes(playerId)) {
+        teamName = "blue";
+    }
+    return res.json({ inMatch, matchId: match.matchId, teamName });
 
 }
 
@@ -104,6 +112,7 @@ const leaveQueue = (req, res) => {
 
         if (data.playerQueue.has(playerId)) {
             data.playerQueue.delete(playerId);
+            console.log(first)
             return res.json({ message: `${playerId} removed from the queue` });
         } else {
             return res.status(404).json({ error: "Player not found in queue" });
