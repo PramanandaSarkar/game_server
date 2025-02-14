@@ -35,7 +35,7 @@ const matchMake = async () => {
             for (const player of matchedPlayers) {
                 data.playerQueue.delete(player.playerId);
             }
-            return match;
+            // return match;
         }
     }
     return {}
@@ -82,23 +82,16 @@ const joinGame = async (req, res) => {
 
 
 const matchStart = async (req, res) => {
+    await matchMake();
     let { playerId } = req.body;
-    let inMatch = false;  // Use let instead of const to allow reassignment
+    let inMatch = false;  
     let match = findMatch(playerId);
-
-    if (match) {
-        inMatch = true;
-        return res.json({ inMatch, matchId: match.matchId });
-    }
-
-    // Player not found in existing matches, create new match
-    match = await matchMake();
     if (!match) {
-        return res.json({ inMatch: false });
+        return res.json({ inMatch });
     }
-
     inMatch = true;
     return res.json({ inMatch, matchId: match.matchId });
+
 }
 
 
