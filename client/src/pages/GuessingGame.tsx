@@ -1,52 +1,66 @@
-import { useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL; // Store API base URL in .env file
+import { useState, useEffect } from "react";
+import apiClient from "../api/api";
 
 function GuessingGame() {
-  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const matchId = localStorage.getItem("matchId");
+  const playerId = localStorage.getItem("userId");
   const [submitted, setSubmitted] = useState(false);
-  const matchId = "123"; // Replace with actual match ID
-  const playerId = localStorage.getItem("userId") || "456"; // Fetch from localStorage if available
+  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const [teamName, setTeamName] = useState<string | null>(null);
 
-  // Dynamically determine team name (example logic)
-  const teamName = playerId === "456" ? "Team Blue" : "Team Green";
+  useEffect(() => {
+    const fetchMatchInfo = async () => {
+      try {
+        const response = await apiClient.post('/match', {
+            matchId, 
+        });
+        console.log(response.data);
+        setTeamName(response.data.teamName);
+      } catch (error) {
+        console.error("Failed to fetch match info:", error);
+      }
+    };
+
+    if (matchId) {
+      fetchMatchInfo();
+    }
+  }, [matchId]);
 
   // Handle number selection
   const handleNumberClick = (num: number) => {
-    if (!submitted) setSelectedNumber(num);
+    if (!submitted) {
+      setSelectedNumber(num);
+    }
   };
 
   // Submit selection to server
   const handleSubmit = async () => {
-    if (selectedNumber === null) {
-      alert("Please select a number!");
-      return;
-    }
-
     try {
-      const response = await fetch(`${API_URL}/match/${matchId}/player/${playerId}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ number: selectedNumber }),
+      const res = await apiClient.post("/match/submit-guess", {
+        matchId,
+        playerId,
+        guess: selectedNumber,
       });
 
-      if (response.ok) {
-        alert("Selection submitted!");
-        setSubmitted(true);
-      } else {
-        alert("Submission failed. Try again.");
-      }
+      console.log(res.data);
+      setSubmitted(true);
     } catch (error) {
-      console.error("Error submitting selection:", error);
+      console.error("Submission failed:", error);
     }
   };
+
+  // if (!matchId || !playerId) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="border p-4 shadow-lg rounded-lg">
         {/* Game Board */}
         <div className="bg-white p-4 rounded-lg shadow-md">
-          <h2 className="text-lg font-bold mb-2 text-center">{teamName} - Game Board</h2>
+          <h2 className="text-lg font-bold mb-2 text-center">
+            {teamName ? `${teamName} - Game Board` : "Loading..."}
+          </h2>
           <div className="grid grid-cols-3 gap-3 p-4">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <button
@@ -70,7 +84,7 @@ function GuessingGame() {
                 : "bg-green-500 text-white hover:bg-green-600"
             }`}
             onClick={handleSubmit}
-            disabled={submitted}
+            disabled={submitted || selectedNumber === null}
           >
             {submitted ? "Submitted!" : "Submit"}
           </button>

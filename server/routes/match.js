@@ -3,7 +3,7 @@ const router = express.Router();
 
 
 import { getQueuedPlayers, runningMatches, joinGame, leaveQueue, matchStart } from "../controllers/match/matchCreate.controller.js";
-import { submitGuess, getResult } from "../controllers/match/matchResult.controller.js";
+import { submitGuess, getResult, findMatchById } from "../controllers/match/matchResult.controller.js";
 
 // Get all players in the queue
 router.get("/queue", getQueuedPlayers);
@@ -15,6 +15,10 @@ router.post("/join", joinGame);
 router.post("/leave", leaveQueue);
 // Check if player is in a match
 router.post("/match-start", matchStart);
+
+router.post("/", findMatchById)
+
+
 // Submit a guess
 router.post("/submit-guess", submitGuess);
 // Get the result
