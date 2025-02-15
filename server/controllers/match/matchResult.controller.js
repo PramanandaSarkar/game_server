@@ -1,12 +1,12 @@
 
-import data from "../../db/data.js";
+import { playerQueue, matches, players } from "../../db/data.js";
 
 
 const submitGuess = async (req, res) => {
     const { matchId, playerId, guess } = req.body;
     console.log(matchId, playerId, guess);
 
-    const match = data.matches.find((m) => m.matchId == matchId);
+    const match = matches.find((m) => m.matchId == matchId);
     console.log(match)
     if (!match) {
         return res.status(404).json({ error: "Match not found" });
@@ -53,7 +53,7 @@ const submitGuess = async (req, res) => {
 const getResult = async (req, res) => {
     const { matchId } = req.body;
     
-    const match = data.matches.find((m) => m.matchId == matchId);
+    const match = matches.find((m) => m.matchId == matchId);
     console.log(match)
 
     if (!match) {
@@ -87,7 +87,7 @@ const getResult = async (req, res) => {
 const findMatchById = async (req, res) => {
     const { matchId, playerId } = req.body;
     console.log(matchId, playerId);
-    const match = data.matches.find((m) => m.matchId == matchId);
+    const match = matches.find((m) => m.matchId == matchId);
     
     if (!match) {
         return res.status(404).json({ error: "Match not found" });

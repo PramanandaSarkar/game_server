@@ -1,12 +1,12 @@
-import data from "../../db/data.js"; // Use `.js` extension for ES Module support
+import { players, playerQueue, matches } from "../../db/data.js"; // Use `.js` extension for ES Module support
 
 
 const getQueuedPlayers = (req, res) => {
-    res.json([...data.playerQueue.values()]);
+    res.json(playerQueue);
 };
 
 const runningMatches = (req, res) => {
-    res.json(data.matches);
+    res.json(matches);
 };
 
 const matchMake = async () => {
@@ -14,7 +14,7 @@ const matchMake = async () => {
     const matchTypes = { "2P": 2, "4P": 4, "6P": 6, "10P": 10 };
 
     for (const [matchType, playerCount] of Object.entries(matchTypes)) {
-        const players = [...data.playerQueue.values()].filter(p => p.matchType == matchType);
+        const players = [...playerQueue.values()].filter(p => p.matchType == matchType);
 
         if (players.length >= playerCount) {
             const matchedPlayers = players.slice(0, playerCount);
@@ -28,12 +28,12 @@ const matchMake = async () => {
             
             const score = { redTeamScore: [], blueTeamScore: [] };
             const match = { matchId, team: { redTeam, blueTeam }, Answer, score };
-            data.matches.push(match);
+            matches.push(match);
 
             console.log(`${match.matchId} match is created`);
 
             for (const player of matchedPlayers) {
-                data.playerQueue.delete(player.playerId);
+                playerQueue.delete(player.playerId);
             }
             // return match;
         }
@@ -42,7 +42,7 @@ const matchMake = async () => {
 };
 
 const findMatch = (playerId) => {
-    for (const match of data.matches) {
+    for (const match of matches) {
         for (const player of match.team.redTeam) {
             if (player == playerId) {
                 return match;
@@ -59,22 +59,36 @@ const findMatch = (playerId) => {
 
 const joinGame = async (req, res) => {
     try {
-        const { playerId, matchType } = req.body;
-        if (!playerId || !matchType) {
-            return res.status(400).json({ error: "playerId and matchType are required" });
+        const { playerId, matchType, isLogin, inMatch } = req.body;
+        // check if playerId, matchType, isLogin, inMatch are provided
+        if (!playerId || !matchType || !isLogin || !inMatch) {
+            return res.status(400).json({ error: "playerId, matchType, isLogin, inMatch are required" });
         }
-
-        if (data.playerQueue.has(playerId)) {
-            return res.status(200).json({ error: "Player already in the queue" });
+        // check if player is logged in
+        if (!isLogin) {
+            return res.status(400).json({ error: "player is not logged in" });
         }
-
-        // Add player to queue
-        data.playerQueue.set(playerId, { playerId, matchType });
+        // check if player is already in a match
+        if (inMatch) {
+            return res.status(400).json({ error: "player is already in a match" });
+        }
+        // check if player is already in queue
+        for ( const player of players) {
+            if (player.playerId == playerId) {
+                return res.status(400).json({ error: "playerId already in queue" });
+            }
+        }
+        // create player object
+        const player = {
+            playerId : playerId,
+            isLogin : isLogin,
+            inMatch : inMatch,
+            matchType: matchType
+        };
+        // add player to queue
+        playerQueue.push(player); 
         console.log(`${playerId} added to the queue`);
-
-        // Check for matchmaking
-        // await matchMake();
-
+        // response to client
         res.json({ message: `${playerId} added to the queue` });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -110,8 +124,8 @@ const leaveQueue = (req, res) => {
             return res.status(400).json({ error: "playerId is required" });
         }
 
-        if (data.playerQueue.has(playerId)) {
-            data.playerQueue.delete(playerId);
+        if (playerQueue.has(playerId)) {
+            playerQueue.delete(playerId);
             console.log(first)
             return res.json({ message: `${playerId} removed from the queue` });
         } else {
