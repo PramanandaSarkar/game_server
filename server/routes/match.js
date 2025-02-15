@@ -2,21 +2,23 @@ import express from "express";
 const router = express.Router();
 
 
-import { getQueuedPlayers, runningMatches, joinGame, leaveQueue, matchStart } from "../controllers/match/matchCreate.controller.js";
+import { queuedPlayers, joinQueue, leaveQueue, runningMatches, makeMatch, getMatch } from "../controllers/match/matchCreate.controller.js";
 import { submitGuess, getResult, findMatchById } from "../controllers/match/matchResult.controller.js";
 
 // Get all players in the queue
-router.get("/queue", getQueuedPlayers);
+router.get("/queue", queuedPlayers);
 // Get all running matches
 router.get("/matches", runningMatches);
 // Add a player to the queue
-router.post("/join", joinGame);
+router.post("/join-queue", joinQueue);
 // Remove a player from the queue
-router.post("/leave", leaveQueue);
-// Check if player is in a match
-router.post("/match-start", matchStart);
+router.post("/leave-queue", leaveQueue);
+// make all possible match in queue
+router.get("/make-match", makeMatch);
+// find match by id
+router.post("/get-match", getMatch);
 
-router.post("/", findMatchById)
+// router.post("/", findMatchById)
 
 
 // Submit a guess

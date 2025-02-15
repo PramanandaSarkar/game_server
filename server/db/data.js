@@ -52,10 +52,10 @@ match1 = {
 }
 
 players = [player1, player2, player3, player4, player5];
-playerQueue = [player3, player4, player5];
-matches = [match1];
+playerQueue = [player1, player2, player3, player4, player5];
+matches = [];
+const matchTypes = { "2P": 2, "4P": 4, "6P": 6, "10P": 10 };
 
 
 
-
-export {players, playerQueue, matches };
+export {players, playerQueue, matches, matchTypes}; 
