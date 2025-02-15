@@ -1,10 +1,19 @@
 
 import { playerQueue, matches, players } from "../../db/data.js";
 
-
+/**
+ * 
+ * @param {matchId: number, playerId: number, guess: number} req 
+ * @param {message: string} res 
+ * @returns 
+ */
 const submitGuess = async (req, res) => {
     const { matchId, playerId, guess } = req.body;
     console.log(matchId, playerId, guess);
+
+    if (!matchId || !playerId || !guess) {
+        return res.status(400).json({ error: "matchId, playerId, and guess are required" });
+    }
 
     const match = matches.find((m) => m.matchId == matchId);
     console.log(match)
@@ -12,11 +21,7 @@ const submitGuess = async (req, res) => {
         return res.status(404).json({ error: "Match not found" });
     }
 
-    // Ensure `team` object exists
-    if (!match.team || !match.team.redTeam || !match.team.blueTeam) {
-        return res.status(500).json({ error: "Match teams not properly set" });
-    }
-
+    
     // Ensure `score` object exists
     if (!match.score) {
         match.score = { redTeamScore: [], blueTeamScore: [] };
@@ -39,17 +44,24 @@ const submitGuess = async (req, res) => {
     // Assign guess to correct team
     if (match.team.redTeam.includes(playerId)) {
         match.score.redTeamScore.push(score);
+        
     } else if (match.team.blueTeam.includes(playerId)) {
         match.score.blueTeamScore.push(score);
-    } 
-    // else {
-    //     return res.status(403).json({ error: "Player is not in this match" });
-    // }
+    } else {
+        return res.status(403).json({ error: "Player is not in this match" });
+    }
+    // set player inMatch to false
+    players.find(p => p.playerId == playerId).inMatch = false; 
 
     return res.status(200).json({ message: "Guess submitted successfully", match });
 };
 
-
+/**
+ * 
+ * @param {matchId: number} req 
+ * @param {winner: string, score: { redTeamScore: number, blueTeamScore: number }} res 
+ * @returns 
+ */
 const getResult = async (req, res) => {
     const { matchId } = req.body;
     
@@ -84,33 +96,32 @@ const getResult = async (req, res) => {
     return res.json({ winner, score: { redTeamScore, blueTeamScore } });
 };
 
-const findMatchById = async (req, res) => {
-    const { matchId, playerId } = req.body;
-    console.log(matchId, playerId);
-    const match = matches.find((m) => m.matchId == matchId);
+// const findMatchById = async (req, res) => {
+//     const { matchId, playerId } = req.body;
+//     console.log(matchId, playerId);
+//     const match = matches.find((m) => m.matchId == matchId);
     
-    if (!match) {
-        return res.status(404).json({ error: "Match not found" });
-    }
+//     if (!match) {
+//         return res.status(404).json({ error: "Match not found" });
+//     }
 
-    // Check if the player is in the blue team
-    const blueTeam = match.team.blueTeam;
-    const redTeam = match.team.redTeam;
+//     // Check if the player is in the blue team
+//     const blueTeam = match.team.blueTeam;
+//     const redTeam = match.team.redTeam;
 
-    if (blueTeam.some(player => player == playerId)) {
-        const teamName = "blue"; // Blue team
-        return res.status(200).json({ match, teamName });
-    } else if (redTeam.some(player => player == playerId)) {
-        const teamName = "red"; // Red team
-        return res.status(200).json({ match, teamName });
-    } else {
-        return res.status(404).json({ error: "Player not found in any team" });
-    }
-};
+//     if (blueTeam.some(player => player == playerId)) {
+//         const teamName = "blue"; // Blue team
+//         return res.status(200).json({ match, teamName });
+//     } else if (redTeam.some(player => player == playerId)) {
+//         const teamName = "red"; // Red team
+//         return res.status(200).json({ match, teamName });
+//     } else {
+//         return res.status(404).json({ error: "Player not found in any team" });
+//     }
+// };
 
 
 export {
     submitGuess,
-    getResult,
-    findMatchById
+    getResult
 }

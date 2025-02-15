@@ -3,7 +3,7 @@ const router = express.Router();
 
 
 import { queuedPlayers, joinQueue, leaveQueue, runningMatches, makeMatch, getMatch } from "../controllers/match/matchCreate.controller.js";
-import { submitGuess, getResult, findMatchById } from "../controllers/match/matchResult.controller.js";
+import { submitGuess, getResult } from "../controllers/match/matchResult.controller.js";
 
 // Get all players in the queue
 router.get("/queue", queuedPlayers);
