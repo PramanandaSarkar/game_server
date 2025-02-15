@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import apiClient from "../api/api";
+import { useNavigate } from "react-router-dom";
 
 function GuessingGame() {
   const matchId = localStorage.getItem("matchId");
@@ -8,24 +9,23 @@ function GuessingGame() {
   const [submitted, setSubmitted] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [result, setResult] = useState(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (submitted) {
       const interval = setInterval(async () => {
-        try {
+        
           const res = await apiClient.post("/match/get-result", { matchId });
           setResult(res.data);
           if (res.data.winner) {
             clearInterval(interval);
           }
-        } catch (error) {
-          console.error("Error fetching result:", error);
-        }
-      }, 5000); // Check every 5 seconds
+        
+      }, 1000); 
 
       return () => clearInterval(interval);
     }
-  }, [submitted]);
+  }, [matchId, submitted]);
   
   const handleNumberClick = (num: number) => {
     if (!submitted) {
@@ -34,14 +34,19 @@ function GuessingGame() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedNumber) return;
-    try {
-        const res = await apiClient.post("/match/submit-guess", { matchId, playerId, guess: selectedNumber });
-        console.log("Response:", res.data);
-        setSubmitted(true);
-    } catch (error) {
-        console.error("Submission failed:", error.response?.data || error);
+    if (!selectedNumber) alert("Please select a number.");
+    else {
+      setSubmitted(true);
+      try {
+        const res = await apiClient.post("/match/submit-guess", { "matchId": matchId, "playerId": playerId, "guess": selectedNumber });
+        setResult(res.data);
+      } catch (error) {
+        console.error("Error submitting guess:", error);
+      }
+      setSelectedNumber(null);
+      alert(`Submitted guess: ${selectedNumber}`);
     }
+    
 };
 
 
@@ -56,7 +61,7 @@ function GuessingGame() {
             <button
               key={num}
               className={`p-6 text-3xl font-bold rounded-lg transition ${
-                selectedNumber === num ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"
+                selectedNumber == num ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"
               } ${submitted ? "opacity-50 cursor-not-allowed" : ""}`}
               onClick={() => handleNumberClick(num)}
               disabled={submitted}
@@ -70,18 +75,16 @@ function GuessingGame() {
             submitted ? "bg-gray-400 text-gray-700 cursor-not-allowed" : "bg-green-500 text-white hover:bg-green-600"
           }`}
           onClick={handleSubmit}
-          disabled={submitted || selectedNumber === null}
+          disabled={submitted || selectedNumber == null}
         >
           {submitted ? "Submitted! Waiting for result..." : "Submit"}
         </button>
-        {result && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-center">
-            <h3 className="text-xl font-bold">Game Result</h3>
-            <p>Winner: {result.winner}</p>
-            <p>Red Team Score: {result.score.redTeamScore}</p>
-            <p>Blue Team Score: {result.score.blueTeamScore}</p>
-          </div>
-        )}
+      <div>
+        <h1>result</h1>
+        {result }
+      </div>
+
+        <div className="mt-4 p-2 border text-center" onClick={() => navigate("/")}>Back to Menu</div>
       </div>
     </div>
   );

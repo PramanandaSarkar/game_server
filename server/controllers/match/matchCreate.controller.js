@@ -14,7 +14,7 @@ const matchMake = async () => {
     const matchTypes = { "2P": 2, "4P": 4, "6P": 6, "10P": 10 };
 
     for (const [matchType, playerCount] of Object.entries(matchTypes)) {
-        const players = [...data.playerQueue.values()].filter(p => p.matchType === matchType);
+        const players = [...data.playerQueue.values()].filter(p => p.matchType == matchType);
 
         if (players.length >= playerCount) {
             const matchedPlayers = players.slice(0, playerCount);

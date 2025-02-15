@@ -4,8 +4,10 @@ import data from "../../db/data.js";
 
 const submitGuess = async (req, res) => {
     const { matchId, playerId, guess } = req.body;
+    console.log(matchId, playerId, guess);
 
-    const match = data.matches.find((m) => m.matchId === matchId);
+    const match = data.matches.find((m) => m.matchId == matchId);
+    console.log(match)
     if (!match) {
         return res.status(404).json({ error: "Match not found" });
     }
@@ -24,10 +26,11 @@ const submitGuess = async (req, res) => {
         playerId,
         guess: parseInt(guess, 10)
     };
+    console.log(score)
 
     // Check if player already submitted a guess
-    const hasSubmitted = match.score.redTeamScore.some(s => s.playerId === playerId) ||
-                         match.score.blueTeamScore.some(s => s.playerId === playerId);
+    const hasSubmitted = match.score.redTeamScore.some(s => s.playerId == playerId) ||
+                         match.score.blueTeamScore.some(s => s.playerId == playerId);
 
     if (hasSubmitted) {
         return res.status(400).json({ error: "Player has already submitted a guess" });
@@ -38,9 +41,10 @@ const submitGuess = async (req, res) => {
         match.score.redTeamScore.push(score);
     } else if (match.team.blueTeam.includes(playerId)) {
         match.score.blueTeamScore.push(score);
-    } else {
-        return res.status(403).json({ error: "Player is not in this match" });
-    }
+    } 
+    // else {
+    //     return res.status(403).json({ error: "Player is not in this match" });
+    // }
 
     return res.status(200).json({ message: "Guess submitted successfully", match });
 };
@@ -48,7 +52,9 @@ const submitGuess = async (req, res) => {
 
 const getResult = async (req, res) => {
     const { matchId } = req.body;
-    const match = data.matches.find((m) => m.matchId === matchId);
+    
+    const match = data.matches.find((m) => m.matchId == matchId);
+    console.log(match)
 
     if (!match) {
         return res.status(404).json({ error: "Match not found" });
@@ -59,7 +65,7 @@ const getResult = async (req, res) => {
         match.score.redTeamScore.length !== match.team.redTeam.length ||
         match.score.blueTeamScore.length !== match.team.blueTeam.length
     ) {
-        return res.status(400).json({ error: "All players have not submitted their guesses yet" });
+        return res.status(200).json(match);
     }
 
     // Calculate team scores
@@ -80,7 +86,8 @@ const getResult = async (req, res) => {
 
 const findMatchById = async (req, res) => {
     const { matchId, playerId } = req.body;
-    const match = data.matches.find((m) => m.matchId === matchId);
+    console.log(matchId, playerId);
+    const match = data.matches.find((m) => m.matchId == matchId);
     
     if (!match) {
         return res.status(404).json({ error: "Match not found" });
@@ -90,10 +97,10 @@ const findMatchById = async (req, res) => {
     const blueTeam = match.team.blueTeam;
     const redTeam = match.team.redTeam;
 
-    if (blueTeam.some(player => player === playerId)) {
+    if (blueTeam.some(player => player == playerId)) {
         const teamName = "blue"; // Blue team
         return res.status(200).json({ match, teamName });
-    } else if (redTeam.some(player => player === playerId)) {
+    } else if (redTeam.some(player => player == playerId)) {
         const teamName = "red"; // Red team
         return res.status(200).json({ match, teamName });
     } else {
