@@ -12,16 +12,16 @@ const Games = () => {
 
   const findmatch = async () => {
     try {
-      const res = await apiClient.post("/match/match-start", {
+      const res = await apiClient.post("/match/make-match", {
         playerId: userId,
       });
       console.log(res.data);
-      if (res.data.inMatch) {
-        setMatch(res.data.match);
-        localStorage.setItem("matchId", res.data.matchId);
-        localStorage.setItem("teamName", res.data.teamName);
-        navigate(`/game/${res.data.matchId}`);
-      }
+      // if (res.data.inMatch) {
+      //   setMatch(res.data.match);
+      //   localStorage.setItem("matchId", res.data.matchId);
+      //   localStorage.setItem("teamName", res.data.teamName);
+      //   navigate(`/game/${res.data.matchId}`);
+      // }
     } catch (error) {
       console.error("Error checking match:", error);
     }
@@ -30,7 +30,7 @@ const Games = () => {
   const joinmatch = async () => {
     try {
       setWaiting(true);
-      const res = await apiClient.post("/match/join", {
+      const res = await apiClient.post("/match/join-queue", {
         playerId: userId,
         matchType: selectedType,
       });
@@ -73,14 +73,7 @@ const Games = () => {
         {waiting ? "Waiting for Match..." : "Start Match"}
       </div>
 
-      {match && (
-        <div className="mt-6 p-3 border rounded-lg bg-green-100 text-black">
-          <p>🎮 Match Found!</p>
-          <p><strong>Match ID:</strong> {match.matchId}</p>
-          <p><strong>Red Team:</strong> {match.team.redTeam.join(", ")}</p>
-          <p><strong>Blue Team:</strong> {match.team.blueTeam.join(", ")}</p>
-        </div>
-      )}
+      
     </div>
   );
 };

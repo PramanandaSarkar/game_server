@@ -19,8 +19,9 @@ const runningMatches = (req, res) => {
 const joinQueue = async (req, res) => {
     try {
         const { playerId, matchType, isLogin, inMatch } = req.body;
+        console.log(playerId, matchType, isLogin, inMatch);
         // check if playerId, matchType, isLogin, inMatch are provided
-        if (!playerId || !matchType || !isLogin || !inMatch) {
+        if (playerId == undefined || matchType == undefined || isLogin == undefined || inMatch == undefined) {
             return res.status(400).json({ error: "playerId, matchType, isLogin, inMatch are required" });
         }
         // check if player is logged in
@@ -32,7 +33,7 @@ const joinQueue = async (req, res) => {
             return res.status(400).json({ error: "player is already in a match" });
         }
         // check if player is already in queue
-        for ( const player of players) {
+        for ( const player of playerQueue) {
             if (player.playerId == playerId) {
                 return res.status(400).json({ error: "playerId already in queue" });
             }
@@ -154,10 +155,11 @@ const leaveQueue = (req, res) => {
         if (!playerId) {
             return res.status(400).json({ error: "playerId is required" });
         }
-
-        if (playerQueue.has(playerId)) {
-            playerQueue.delete(playerId);
-            console.log(first)
+        if (playerQueue.push(playerId)) {
+            const index = playerQueue.findIndex(p => p.playerId == playerId);
+            if (index !== -1) {
+                playerQueue.splice(index, 1);
+            }
             return res.json({ message: `${playerId} removed from the queue` });
         } else {
             return res.status(404).json({ error: "Player not found in queue" });
